@@ -28,6 +28,7 @@ require('../config.php');
 require_once($CFG->libdir . '/filelib.php');
 require_once(__DIR__ . '/lib.php');
 
+
 // Only real logged in users.
 require_login(null, false, null, true, true);
 if (isguestuser()) {
@@ -47,6 +48,9 @@ switch ($action) {
 
     // Sending a message.
     case 'sendmessage':
+	
+	//Suppress output from PHPMailer in case debugsmtp is enabled
+	ob_start();
 
         $userid = required_param('userid', PARAM_INT);
         if (empty($userid) || isguestuser($userid) || $userid == $USER->id) {
@@ -70,8 +74,13 @@ switch ($action) {
         }
 
         $response = array();
-        break;
+	
+	//Clean output
+	ob_end_clean();
+        
+	break;
 }
+
 
 if ($response !== null) {
     echo json_encode($response);
