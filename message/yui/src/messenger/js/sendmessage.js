@@ -174,6 +174,18 @@ Y.namespace('M.core_message.messenger').sendMessage = Y.extend(SENDMSGDIALOG, M.
                 success: function(id, response) {
                     var data = null;
 
+                    //Display debugging information in an alert
+                    //Even if debug level is set to 'Developer', debugsmtp might be off
+                    if (M.cfg.developerdebug && response.responseText!='[]'){
+                        new M.core.alert({
+                            title: 'SMTP Debugging information',
+                            message: '<div class="pre-scrollable" style="text-align:left;">'+response.responseText+'</div>',
+                            width: '80%',
+                            draggable: true,
+                            center: false
+                        });
+                    }
+
                     try {
                         data = Y.JSON.parse(response.responseText);
                         if (data.error) {
@@ -182,9 +194,12 @@ Y.namespace('M.core_message.messenger').sendMessage = Y.extend(SENDMSGDIALOG, M.
                             return;
                         }
                     } catch (e) {
-                        this.hideNotice();
-                        new M.core.exception(e);
-                        return;
+                        //Do not display exception caused by debugging info - see MDL-53146
+                        if(!M.cfg.developerdebug){
+                            this.hideNotice();
+                            new M.core.exception(e);
+                            return;
+                        }
                     }
 
                     // Show a success message.
@@ -193,8 +208,11 @@ Y.namespace('M.core_message.messenger').sendMessage = Y.extend(SENDMSGDIALOG, M.
                     // Hide the dialog.
                     Y.later(1300, this, function() {
                         this.setSendLock(false);
-                        this.hideNotice();
-                        this.hide();
+                        //Allow user time to see all messages
+                        if(!M.cfg.developerdebug){
+                            this.hideNotice();
+                            this.hide();
+                        }
                     });
                 },
                 failure: function() {
